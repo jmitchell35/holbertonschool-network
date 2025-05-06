@@ -57,11 +57,6 @@ echo "Hello, World!"  # This prints the text to the console
 
 The `#!/bin/bash` is called a "shebang" or "hashbang" line. It tells the system which interpreter to use for executing the script.
 
-Using `#!/usr/bin/env bash` instead of a direct path like `#!/bin/bash` provides portability benefits:
-
-* It finds the first bash in your PATH, which works even if bash is installed in different locations on different systems
-* It respects any customized environment variables that might affect which bash executable to use
-
 ### Making Scripts Executable
 
 ```bash
@@ -324,14 +319,20 @@ fi
 
 ##### String Test Operators
 
-| Operator | Description |
-|----------|-------------|
-| `-z string` | True if string is empty |
-| `-n string` | True if string is not empty |
-| `string1 = string2` | True if strings are equal |
-| `string1 != string2` | True if strings are not equal |
-| `string1 < string2` | True if string1 sorts before string2 lexicographically |
-| `string1 > string2` | True if string1 sorts after string2 lexicographically |
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `-z string` | True if string is empty | `[ -z "$var" ]` |
+| `-n string` | True if string is not empty | `[ -n "$var" ]` |
+| `string` | True if string is not empty (implicit test) | `[ "$var" ]` |
+| `string1 = string2` | True if strings are equal | `[ "$a" = "$b" ]` |
+| `string1 != string2` | True if strings are not equal | `[ "$a" != "$b" ]` |
+| `string1 < string2` | True if string1 sorts before string2 lexicographically | `[ "$a" \< "$b" ]` |
+| `string1 > string2` | True if string1 sorts after string2 lexicographically | `[ "$a" \> "$b" ]` |
+
+**Important Notes:**
+- The operator must come first inside the brackets: `[ -n "$1" ]` (correct) vs `[ "$1" -n ]` (incorrect)
+- Always quote variables to handle empty strings and spaces: `[ -n "$var" ]` not `[ -n $var ]`
+- The test `[ "$var" ]` is equivalent to `[ -n "$var" ]` (both test if string is non-empty)
 
 ##### Numeric Comparison Operators
 
@@ -1235,6 +1236,47 @@ if __name__ == "__main__":
    ```
 
 ## Practical Examples
+
+### Using String Operators
+
+Let's look at a practical example of using string operators in a script. This example shows how to properly use the `-n` string operator:
+
+```bash
+#!/bin/bash
+#
+# Script to check if a host is reachable
+# Usage: ./is_host_on_network.sh {IP_ADDRESS}
+
+# Check if an argument was provided
+if [ -n "$1" ]; then
+    # The -n operator tests if a string is non-empty
+    # This line means: "If the first argument ($1) is not empty, then..."
+    ping -c 5 "$1"  # Ping the provided IP address 5 times
+else
+    # This runs when no argument is provided (empty string)
+    echo "Usage: ./is_host_on_network.sh {IP_ADDRESS}"
+fi
+```
+
+The same check could be written using implicit testing:
+
+```bash
+#!/bin/bash
+
+# Alternative syntax: implicit non-empty string test
+if [ "$1" ]; then
+    # This is equivalent to [ -n "$1" ]
+    # It means "if $1 is not empty"
+    ping -c 5 "$1"
+else
+    echo "Usage: ./is_host_on_network.sh {IP_ADDRESS}"
+fi
+```
+
+Important things to note:
+1. The operator (`-n`) comes before the string being tested
+2. We always quote the variable (`"$1"`) to handle spaces properly
+3. The test must be inside square brackets with spaces: `[ -n "$1" ]`
 
 ### System Monitoring Script
 
