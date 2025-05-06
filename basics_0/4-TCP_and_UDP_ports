@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
+# script displaying all listening port and pid of associated process
 netstat -lp
