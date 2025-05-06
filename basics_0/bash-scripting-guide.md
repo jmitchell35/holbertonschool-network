@@ -280,9 +280,20 @@ echo $USER
 | `ssh` | Secure shell client | `ssh user@host` |
 | `scp` | Secure copy | `scp file.txt user@host:/path` |
 | `netstat` | Network statistics | `netstat -tuln` |
+| `ss` | Socket statistics (modern netstat) | `ss -tuln` |
 | `ifconfig`/`ip` | Network interface configuration | `ifconfig` or `ip addr` |
 | `host` | DNS lookup | `host example.com` |
 | `dig` | DNS lookup utility | `dig example.com` |
+| `telnet` | Connect to remote host on specific port | `telnet host.com 80` |
+| `nc` | Netcat - versatile networking utility | `nc -zv host.com 80` |
+| `traceroute` | Trace packet route to host | `traceroute google.com` |
+| `nmap` | Network exploration and security scanning | `nmap -p 1-100 host.com` |
+| `tcpdump` | Capture and analyze network traffic | `tcpdump -i eth0 port 80` |
+| `mtr` | Combines ping and traceroute | `mtr google.com` |
+| `whois` | Query domain registration info | `whois example.com` |
+| `rsync` | Fast, versatile file copying | `rsync -avz dir/ user@host:/path` |
+| `iptables` | Configure firewall rules | `iptables -L` |
+| `arp` | View/modify ARP cache | `arp -a` |
 
 ## Control Structures
 
@@ -1939,20 +1950,150 @@ echo "Generated HTML table: employee_table.html"
 
 ## Resources for Further Learning
 
-### Online Documentation
+### Bash Analysis and Linting Tools
 
-1. **Official Bash Documentation**:
-   - [GNU Bash Manual](https://www.gnu.org/software/bash/manual/)
-   - [Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html)
+Static analysis tools help identify potential issues in your scripts before they cause problems in production. Here's a comparison of the most useful Bash script analysis tools:
 
-2. **Tutorials and Guides**:
-   - [Bash Guide for Beginners](https://tldp.org/LDP/Bash-Beginners-Guide/html/)
-   - [Advanced Bash-Scripting Guide](https://tldp.org/LDP/abs/html/)
-   - [ShellCheck](https://www.shellcheck.net/) - Online tool to analyze shell scripts
+| Tool | Description | Best For |
+|------|-------------|----------|
+| **ShellCheck** | The most popular static analysis tool for shell scripts. Identifies syntax issues, semantic problems, and potential bugs. | General-purpose shell script validation; beginners and experts alike |
+| **Bashate** | A code style enforcement tool inspired by Python's PEP8. Focuses on formatting and style consistency. | Teams that want consistent formatting across all scripts |
+| **i-Code CNES** | Open-source static code analyzer supporting both Shell and Fortran scripts. Developed by the French Space Agency. | Scientific computing environments; complex validation requirements |
+| **Shellharden** | Focuses on syntax highlighting and semi-automated rewriting of scripts to make them safer. Specializes in proper quoting. | Hardening existing scripts against common security issues |
+| **Checkbashisms** | Specifically detects "bashisms" (Bash-specific features) in scripts intended to be POSIX-compliant. | Writing portable scripts that need to run on multiple shells |
+| **Trunk Check** | A meta-linter that can integrate ShellCheck and other tools into a unified workflow. | Projects with multiple languages and tools |
+| **Mega-Linter** | A combination of multiple linters that can be installed as a GitHub Action. | CI/CD pipelines; multi-language projects |
 
-3. **Interactive Learning**:
-   - [Learn Shell](https://www.learnshell.org/)
-   - [Exercism Bash Track](https://exercism.org/tracks/bash)
+#### Editor Integrations
+
+Most of these tools can be integrated with popular code editors:
+
+- **Flycheck**: For Emacs users, provides real-time syntax checking
+- **SublimeLinter**: Linting plugin for Sublime Text, supports multiple linters
+- **Linter**: Package for Atom/Pulsar Editor with shell script support
+
+#### Example ShellCheck Integration
+
+Here's how to use ShellCheck from the command line:
+
+```bash
+# Install ShellCheck (Ubuntu/Debian)
+sudo apt-get install shellcheck
+
+# Check a script
+shellcheck myscript.sh
+
+# Enable specific checks and disable others
+shellcheck -e SC2034,SC2154 --enable=all myscript.sh
+```
+
+For continuous integration, add to your CI config:
+
+```yaml
+# Example GitHub Actions workflow
+name: ShellCheck
+
+on: [push, pull_request]
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+```
+
+#### Integrating Bash and Python Analysis Tools
+
+For projects that use both Bash and Python, you can set up an integrated analysis workflow:
+
+1. **Pre-commit Hooks**: Set up pre-commit to run both Bash and Python linters before each commit:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+-   repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+    -   id: shellcheck
+-   repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+-   repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    -   id: black
+```
+
+2. **VS Code Configuration**: Configure VS Code to work with both languages:
+
+```json
+// .vscode/settings.json
+{
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "shellcheck.enable": true,
+    "shellcheck.useWorkspaceRootAsCwd": true,
+    "shellcheck.run": "onSave"
+}
+```
+
+3. **Cross-Language Tools**:
+
+- **SonarQube**: Can analyze both Bash and Python code in the same project
+- **Mega-Linter**: Supports 50+ languages including Bash and Python
+- **Trunk**: Unified linting for both Bash and Python scripts
+
+4. **CI Pipeline Example** (GitHub Actions for both languages):
+
+```yaml
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort
+    
+    - name: Run Python linters
+      run: |
+        flake8 .
+        black --check .
+        isort --check .
+    
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      with:
+        scandir: './scripts'
+```
+
+5. **Python-Bash Interaction Analysis**:
+
+- **pyshellcheck**: A Python wrapper for ShellCheck that can be used in Python scripts that generate or analyze Bash code
+- **bashlex**: A Python library for parsing Bash code, useful for custom static analysis tools
+- **explainshell**: A web tool that helps understand shell commands (can be used via API)
+
+This integrated approach ensures code quality across both languages, especially important when Bash and Python scripts interact with each other in the same project.
+
+Integrating these tools into your development workflow helps catch errors early and ensures consistent, high-quality code across both Bash and Python.
 
 ### Books
 
