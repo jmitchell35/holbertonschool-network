@@ -22,6 +22,7 @@ sudo sed -i 's/127\.0\.0\.1[[:space:]]\+localhost/127.0.0.2 localhost/' "${copy_
 if grep -q "facebook\.com" "${copy_file}"; then
     sudo sed -i 's/.*[[:space:]]\+facebook\.com/8.8.8.8 facebook.com/' "${copy_file}"
 else
+    # tee command reads from stdin and writes to stdout AND file (or cmd) -append
     echo "8.8.8.8 facebook.com" | sudo tee -a "${copy_file}" > /dev/null
 fi
 
