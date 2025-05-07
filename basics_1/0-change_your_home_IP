@@ -30,7 +30,7 @@ fi
 if grep -q "127\.0\.0\.2[[:space:]]\+localhost" "${copy_file}" && \
    grep -q "8\.8\.8\.8[[:space:]]\+facebook\.com" "${copy_file}"; then
     # Replace original file
-    sudo mv "${copy_file}" /etc/hosts
+    sudo cp -f "${copy_file}" /etc/hosts
 else
     exit 1
 fi
