@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Script that configures an Ubuntu server with custom IP resolutions
+# - localhost resolves to 127.0.0.2
+# - facebook.com resolves to 8.8.8.8
+
+# Create a dated backup
+timestamp=$(date +%Y%m%d%H%M%S)
+backup_file="/tmp/hosts.bak.${timestamp}"
+copy_file="/tmp/hosts.new"
+
+# Create backup
+sudo cp /etc/hosts "${backup_file}" || { echo "Failed to create backup"; exit 1; }
+
+# Create working copy
+sudo cp /etc/hosts "${copy_file}" || { echo "Failed to create working copy"; exit 1; }
+
+# Change localhost resolution from 127.0.0.1 to 127.0.0.2
+sudo sed -i 's/127\.0\.0\.1[[:space:]]\+localhost/127.0.0.2 localhost/' "${copy_file}"
+
+# Add facebook.com entry (or replace if exists)
+# grep -q suppresses the output because we only care about existence true/false
+if grep -q "facebook\.com" "${copy_file}"; then
+    sudo sed -i 's/.*[[:space:]]\+facebook\.com/8.8.8.8 facebook.com/' "${copy_file}"
+else
+    echo "8.8.8.8 facebook.com" | sudo tee -a "${copy_file}" > /dev/null
+fi
+
+# Verify changes
+if grep -q "127\.0\.0\.2[[:space:]]\+localhost" "${copy_file}" && \
+   grep -q "8\.8\.8\.8[[:space:]]\+facebook\.com" "${copy_file}"; then
+    # Replace original file
+    sudo mv "${copy_file}" /etc/hosts
+else
+    exit 1
+fi
