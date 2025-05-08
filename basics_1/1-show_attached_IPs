@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 # Script displaying IPv4 addresses on machine
-ip -4 addr
+# if config displays all interfaces network configuration
+# grep searches for pattern, -E for regex, -o outputs only the matched parts
+# pattern matches 3 groups of digits followed by a dot (and then a final series of digits)
+# awk Takes the output from grep and prints only the second field
+# Output is either addr:W.X.Y.Z or W.X.Y.Z
+ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | awk '{print $2}'
